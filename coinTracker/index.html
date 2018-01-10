@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Title</title>
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<style>
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+</style>
+</head>
+<body>
+<table id ="table">
+  <tr>
+  <th>Symbol</th>
+  <th># of coins</th>
+  <th>price when bought(BTC)</th>
+  <th>price now</th>
+  <th>balance</th>
+  <th>change 24h</th>
+  <th>Δprice</th>
+  </tr>
+  
+  <tr id = "1">
+  <td><input type="text"></td>
+  <td><input type="text"></td>
+  <td><input type="text"></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  <td></td>
+  </tr>
+</table>
+<button type="button" class="btn btn-success" id="add">Add</button>
+<br>
+<button type="button" class="btn btn-success" id="Run">Run</button>
+<h3 id="total">0</h3>
+
+</body>
+<script>
+var numberOfRows = 1;
+var stop = false;
+var runTimer = null;
+$( "#Run" ).click(function() {
+    
+   console.log(stop)
+   if(!stop){
+     getData()
+     runTimer = setInterval(function(){ getData() }, 60*1000);
+     $(this).text("Stop")
+     stop = true
+    
+   }else{
+     stop = false
+      clearInterval(runTimer);
+     $(this).text("Run")
+     
+   }
+});
+function getData(){
+    let url = 'https://api.coinmarketcap.com/v1/ticker/?limit=0';
+    fetch(url)
+    .then(res => res.json())
+    .then((out) => {
+      var total = 0;
+      console.log(out )
+      for(i =1;i<=numberOfRows;i++){
+
+        var row = $('#'+i)
+        out.forEach(function(element) {
+            let symbol = row.find("input:eq(0)").val();
+            let amount = row.find("input:eq(1)").val();
+            let priceWhenBought = row.find("input:eq(2)").val();
+            
+            if(symbol == element.symbol){
+               row.find("td:eq(3)").html("$"+element.price_btc);
+               row.find("td:eq(4)").html("$"+element.price_usd*amount);
+               row.find("td:eq(5)").html(element.percent_change_24h);
+               row.find("td:eq(6)").html(((element.price_btc/priceWhenBought) -1).toFixed(2)*100+"%");
+               total = total + (element.price_usd*amount);
+               
+            }
+        });
+      }
+    $("#total").text(total);
+    })
+    .catch(err => { throw err });
+}
+
+$( "#add" ).click(function() {
+  numberOfRows ++
+  var rowToAdd = "<tr id ='"+numberOfRows+"'><td><input type='text'></td><td><input type='text'></td><td><input type='text'></td><td  ></td>  <td  > </td><td  ></td>  <td  > </td></tr>"
+  $("#table").append(rowToAdd);
+});
+</script>
+</html>
